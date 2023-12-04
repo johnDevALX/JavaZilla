@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  mysqldb:
+    image: mysql
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=ekenesql
+      - MYSQL_DATABASE=javazilla
+    networks:
+      - javazilla
+
+  java-zilla:
+    image: ekenedian/javazilla:1.0.0
+    ports:
+      - "5000:5000"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 50s
+        max_attempts: 3
+        window: 120s
+    depends_on:
+      - mysqldb
+    environment:
+      DB_URL: jdbc:mysql://host.docker.internal:3307/javazilla
+      DB_USER: root
+      DB_PASSWORD: ekenesql
+      DRIVER_CLASS: com.mysql.jdbc.Driver
+    networks:
+      - javazilla
+
+
+networks:
+  javazilla:

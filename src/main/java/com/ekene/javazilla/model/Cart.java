@@ -16,11 +16,10 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Product product;
 
     private int desiredQty;
-
     @OneToOne
     @JoinColumn(referencedColumnName = "id")
     private Customer customer;

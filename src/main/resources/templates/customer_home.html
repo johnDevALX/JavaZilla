@@ -70,6 +70,13 @@
         </div>
     </div>
 </nav>
+<div th:if="${param.successful}">
+    <div class="alert alert-success"> Products Purchased Successfully! </div>
+</div>
+<div th:if="${param.unsuccessful}">
+    <div class="alert alert-success"> Unsuccessful Purchase. Low Account Bal!  </div>
+</div>
+
 <h2 class="text-center mb-5 fw-bold">WELCOME TO JavaZilla, YOUR BEST SHOP FOR THRIFT SHOPPING <i
         class="bi bi-stars"></i></h2>
 <div class="container-lg" id="intro">

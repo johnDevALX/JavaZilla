@@ -14,4 +14,6 @@ public interface CustomerService {
     ProductDto getProductById(Long id);
     void addToCart(AddToCartDto addToCartDto);
     List<ShowProductsInCartDto> findAllCartByCustomer(Long customerId);
+    Boolean sellCartProducts(Long customerId);
+    void deleteCart(Long cartId);
 }

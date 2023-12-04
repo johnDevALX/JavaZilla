@@ -20,6 +20,7 @@ import java.util.Optional;
 @Service
 public class CustomerServiceImpl implements CustomerService{
 
+    // TODO Learn constructor dependency injection
     @Autowired
     private ProductRepository productRepository;
     @Autowired
@@ -88,16 +89,18 @@ public class CustomerServiceImpl implements CustomerService{
         Product product = productRepository.findById(addToCartDto.getProductId()).get();
         Customer customer = customerRepository.findById(addToCartDto.getCustomerId()).get();
         Optional<Cart> checkDupCart = cartRepository.findByProduct_IdAndCustomer_Id(addToCartDto.getProductId(), addToCartDto.getCustomerId());
-        if (checkDupCart.isPresent()){
-            Cart cart = checkDupCart.get();
-            cart.setDesiredQty(cart.getDesiredQty() + addToCartDto.getDesiredQty());
-            cartRepository.save(cart);
-        } else {
-            Cart cart = new Cart();
+        if (product.getQuantity() >= addToCartDto.getDesiredQty()){
+            Cart cart;
+            if (checkDupCart.isPresent()){
+                cart = checkDupCart.get();
+                cart.setDesiredQty(cart.getDesiredQty() + addToCartDto.getDesiredQty());
+            } else {
+                cart = new Cart();
 //        cart.setProduct(Collections.singletonList(product));
-            cart.setProduct(product);
-            cart.setCustomer(customer);
-            cart.setDesiredQty(addToCartDto.getDesiredQty());
+                cart.setProduct(product);
+                cart.setCustomer(customer);
+                cart.setDesiredQty(addToCartDto.getDesiredQty());
+            }
             cartRepository.save(cart);
         }
     }
@@ -107,26 +110,71 @@ public class CustomerServiceImpl implements CustomerService{
 
         List<Cart> cartByCustomer_id = cartRepository.findCartByCustomer_Id(customerId);
         cartByCustomer_id.forEach(System.out::println);
-        System.out.println("from cart###################################");
+//        System.out.println("from cart###################################");
         List<ShowProductsInCartDto> showProductsInCartDtoList = new ArrayList<>();
         for (Cart cart:cartByCustomer_id) {
             BigDecimal total = new BigDecimal(0);
             ShowProductsInCartDto showProductsInCartDto = new ShowProductsInCartDto();
             Product product =  productRepository.findById(cart.getProduct().getId()).get();
-            log.debug("Product  ##############################---->: {}", product);
+//            log.debug("Product  ##############################---->: {}", product);
+            showProductsInCartDto.setId(cart.getId());
             showProductsInCartDto.setProductImage(product.getImage());
             showProductsInCartDto.setProductName(product.getName());
             showProductsInCartDto.setProductPrice(product.getPrice());
             showProductsInCartDto.setDesiredQty(cart.getDesiredQty());
             total = (product.getPrice().multiply(BigDecimal.valueOf(cart.getDesiredQty())));
             log.debug("Products In Carts ===============>: {}", showProductsInCartDto);
-
+            showProductsInCartDto.setTotal(total);
             showProductsInCartDtoList.add(showProductsInCartDto);
             System.out.println("Carts total: " + total);
         }
-
-        System.out.println("from cartDTO#############################");
-        showProductsInCartDtoList.forEach(System.out::println);
+//        System.out.println("from cartDTO#############################");
+//        showProductsInCartDtoList.forEach(System.out::println);
+//        double newTotal = 0.0;
+//        for (ShowProductsInCartDto showProductsInCartDto:
+//             showProductsInCartDtoList) {
+//            BigDecimal tt = new BigDecimal("0");
+//            System.out.println(showProductsInCartDto.getTotal());
+//            tt = (showProductsInCartDto.getTotal());
+//            newTotal += tt.doubleValue();
+//        }
+//        System.out.println(newTotal + " ###################END");
         return showProductsInCartDtoList;
+    }
+
+    @Override
+    public Boolean sellCartProducts(Long customerId) {
+        Customer customer = customerRepository.findById(customerId).get();
+        double cartTotal = checkCartTotal(customerId);
+        if (customer.getBal().compareTo(BigDecimal.valueOf(cartTotal)) >= 1){
+            customer.setBal(customer.getBal().subtract(BigDecimal.valueOf(cartTotal)));
+            List<Cart> cartByCustomer_id = cartRepository.findCartByCustomer_Id(customerId);
+            for (Cart cart:cartByCustomer_id) {
+                Product product = cart.getProduct();
+                Product product1 = productRepository.findById(product.getId()).get();
+                product1.setQuantity(product1.getQuantity() - cart.getDesiredQty());
+                productRepository.save(product1);
+            }
+            cartRepository.deleteAllByCustomer_Id(customerId);
+            return true;
+        } else
+            return false;
+    }
+
+    @Override
+    public void deleteCart(Long cartId) {
+        cartRepository.deleteById(cartId);
+    }
+
+    private double checkCartTotal(Long CustomerId){
+        double newTotal = 0.0;
+        for (ShowProductsInCartDto showProductsInCartDto:
+                findAllCartByCustomer(CustomerId)) {
+            BigDecimal tt = new BigDecimal("0");
+            System.out.println(showProductsInCartDto.getTotal());
+            tt = (showProductsInCartDto.getTotal());
+            newTotal += tt.doubleValue();
+        }
+        return newTotal;
     }
 }

@@ -23,8 +23,15 @@ import java.util.List;
 @Controller
 public class CustomerController {
 
-    @Autowired
+
+
+
     private CustomerService customerService;
+    @Autowired
+    public CustomerController(CustomerService customerService1){
+        this.customerService = customerService1;
+    }
+
     @Autowired
     private CustomerServiceImpl customerServiceImpl;
 
@@ -94,5 +101,17 @@ public class CustomerController {
     public String customerCart(@PathVariable(value = "c_id") String customer_id, Model model){
         model.addAttribute("cartList", customerService.findAllCartByCustomer(Long.parseLong(customer_id)));
         return "view_customer_cart";
+    }
+    @GetMapping("/sellCartProducts/{c_id}")
+    public String sellCartProducts(@PathVariable(value = "c_id") String c_id){
+        if (customerService.sellCartProducts(Long.parseLong(c_id))){
+            return "redirect:/welcomeMsg?value=successful";
+        }else
+            return "redirect:/welcomeMsg?value=unsuccessful";
+    }
+    @GetMapping("/deleteCart/{cart_id}")
+    public String deleteCart(@PathVariable(value = "cart_id") Long cart_id){
+        customerService.deleteCart(cart_id);
+        return "redirect:/customerCart?success";
     }
 }
